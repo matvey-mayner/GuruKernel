@@ -37,13 +37,30 @@ function bootloader.runFile(path)
     return program()
 end
 
+function bootloader.initLibs(libPath)
+    if not bootloader.fs.exists(libPath) or not bootloader.fs.isDirectory(libPath) then
+        error("Libraries directory not found: " .. libPath)
+    end
+
+    for _, file in ipairs(bootloader.fs.list(libPath)) do
+        local fullPath = libPath .. "/" .. file
+        if not bootloader.fs.isDirectory(fullPath) then
+            print("Loading library: " .. fullPath)
+            bootloader.runFile(fullPath)
+        end
+    end
+end
+
 function bootloader.boot()
-    local shellPath = "/GuruKernel/System/main.lua"
-    
-    if bootloader.fs.exists(shellPath) then
-        bootloader.runFile(shellPath)
+    local libPath = "/lib"
+    local mainScriptPath = "/boot/main.lua"
+
+    bootloader.initLibs(libPath) -- lib init
+
+    if bootloader.fs.exists(mainScriptPath) then
+        bootloader.runFile(mainScriptPath)
     else
-        error("No bootable systems found at " .. shellPath)
+        error("Main script not found: " .. mainScriptPath)
     end
 end
 
