@@ -1,61 +1,40 @@
-local bootfs = component.proxy(computer.getBootAddress())
-local tmpfs = component.proxy(computer.tmpAddress())
+local component = component
+local computer = computer
+local eeprom = component.eeprom
 
-local function readFile(fs, path)
-    local file, err = fs.open(path, "rb")
-    if not file then return nil, err end
+local bootAddress = computer.getBootAddress()
+local fs = component.proxy(bootAddress)
 
-    local buffer = ""
+local bootFilePath = "GuruKernel/boot.lua"
+
+local function loadBootFile(path)
+    local file, err = fs.open(path, "r")
+    if not file then
+        error("Failed to open boot file: " .. err)
+    end
+    
+    local data = ""
     repeat
-        local data = fs.read(file, math.huge)
-        buffer = buffer .. (data or "")
-    until not data
+        local chunk = fs.read(file, math.huge)
+        data = data .. (chunk or "")
+    until not chunk
+    
     fs.close(file)
-
-    return buffer
+    return data
 end
 
-local function loadfile(fs, path, mode, env)
-    local data, err = readFile(fs, path)
-    if not data then return nil, err end
-    return load(data, "=" .. path, mode or "bt", env or _G)
-end
-
-local function unserialize(str)
-    local code = load("return " .. str, "=unserialize", "t", {math={huge=math.huge}})
-    if code then
-        local result = {pcall(code)}
-        if result[1] and type(result[2]) == "table" then
-            return result[2]
-        end
+local function runBoot()
+    local code, err = loadBootFile(bootFilePath)
+    if not code then
+        error("Failed to load boot file: " .. err)
     end
-end
-
-local bootloaderSettingsPath = "/boot"
-local bootmanagerfile = "/bootmanager/main.lua"
-if bootfs.exists(bootmanagerfile) and not tmpfs.exists(bootloaderSettingsPath) then
-    assert(loadfile(bootfs, bootmanagerfile))()
-end
-
-
-local bootloaderSettingsPath_bootfile = bootloaderSettingsPath .. "/bootfile"
-local bootfile
-if tmpfs.exists(bootloaderSettingsPath_bootfile) then
-    bootfile = assert(readFile(tmpfs, bootloaderSettingsPath_bootfile))
-else
-    bootfile = "/GuruKernel/boot.lua"
-end
-
-local bootloaderSettingsPath_bootaddr = bootloaderSettingsPath .. "/bootaddr"
-local bootproxy
-if tmpfs.exists(bootloaderSettingsPath_bootaddr) then
-    local bootaddr = assert(readFile(tmpfs, bootloaderSettingsPath_bootaddr))
-    computer.getBootAddress = function()
-        return bootaddr
+    
+    local bootProgram, loadErr = load(code, "="..bootFilePath, "t", _G)
+    if not bootProgram then
+        error("Failed to load boot program: " .. loadErr)
     end
-    bootproxy = assert(component.proxy(bootaddr))
-else
-    bootproxy = bootfs
+
+    bootProgram()
 end
 
-tmpfs.remove(bootloaderSettingsPath)
+runBoot()
