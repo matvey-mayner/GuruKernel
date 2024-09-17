@@ -52,7 +52,7 @@ function bootloader.initLibs(libPath)
 end
 
 function bootloader.boot()
-    local libPath = "/lib"
+    local libPath = "/GuruKernel/lib"
     local mainScriptPath = "/boot/main.lua"
 
     bootloader.initLibs(libPath) -- lib init
