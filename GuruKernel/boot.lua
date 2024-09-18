@@ -45,7 +45,6 @@ function bootloader.initLibs(libPath)
     for _, file in ipairs(bootloader.fs.list(libPath)) do
         local fullPath = libPath .. "/" .. file
         if not bootloader.fs.isDirectory(fullPath) then
-            print("Loading library: " .. fullPath)
             bootloader.runFile(fullPath)
         end
     end
