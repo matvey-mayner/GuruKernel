@@ -268,8 +268,8 @@ local function selectDist(dists)
                     status("Please Wait")
                     --proxy.remove("/") -- У нас тут ядро качаеться а не система!
                     local label = strs[num]
-                    if label == "Nope!" then
-                        label = ""
+                    if label == "" then
+                        label = "Guru Kernel"
                     end
                     proxy.setLabel(label)
                     funcs[num](proxy)
