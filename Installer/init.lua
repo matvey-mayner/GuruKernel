@@ -303,7 +303,7 @@ end
 local function online()
     local dists = {}
 
-    local filelist = split(assert(getInternetFile("https://raw.githubusercontent.com/matvey-mayner/GuruKernel/main/Installer/list.txt")), "\n")
+    local filelist = split(assert(getInternetFile("https://raw.githubusercontent.com/matvey-mayner/GuruKernel/refs/heads/main/Installer/list.txt")), "\n")
     for i, v in ipairs(filelist) do
         if v ~= "" then
             local url, name = table.unpack(split(v, ";"))
